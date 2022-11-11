@@ -2,6 +2,8 @@ package routes
 
 import (
 	"api-catalog/src/controllers"
+	"fmt"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,6 +16,8 @@ func Routes() {
 	route.GET("/product/:id_product", controllers.GetProduct)
 	route.PUT("/product/:id_product", controllers.UpdateProduct)
 	// route.DELETE("/todo/:idTodo", controllers.DeleteTodo)
-
-	route.Run("10.19.23.18:8081")
+	hostPorts := os.Getenv("HOST_PORT")
+	hostName := os.Getenv("HOST_NAME")
+	addr := fmt.Sprintf("%s:%s", hostName, hostPorts)
+	route.Run(addr)
 }
