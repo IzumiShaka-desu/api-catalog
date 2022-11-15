@@ -14,7 +14,7 @@ func Routes() {
 	// route.POST("/todo", controllers.CreateTodo)
 	route.GET("/product", controllers.GetAllProduct)
 	route.GET("/product/:id_product", controllers.GetProduct)
-	route.PUT("/product/:id_product", controllers.UpdateProduct)
+	route.PATCH("/product/:id_product", controllers.UpdateProduct)
 	// route.DELETE("/todo/:idTodo", controllers.DeleteTodo)
 	hostPorts := os.Getenv("HOST_PORT")
 	hostName := os.Getenv("HOST_NAME")
