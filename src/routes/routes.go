@@ -14,6 +14,7 @@ func Routes() {
 	// route.POST("/todo", controllers.CreateTodo)
 	route.GET("/product", controllers.GetAllProduct)
 	route.GET("/product/:id_product", controllers.GetProduct)
+	route.GET("/product/categories", controllers.GetAllBatteryType)
 	route.PATCH("/product/:id_product", controllers.UpdateProduct)
 	route.GET("/product/search", controllers.SearchProduct)
 	// route.DELETE("/todo/:idTodo", controllers.DeleteTodo)
