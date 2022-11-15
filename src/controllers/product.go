@@ -100,6 +100,25 @@ func GetAllProduct(context *gin.Context) {
 	})
 
 }
+func SearchProduct(context *gin.Context) {
+	var product []models.Product
+	//query q to search based on nama_product and desc_product
+	q := context.Query("q")
+
+	err := db.Where("nama_product LIKE ? OR desc_product LIKE ?", "%"+q+"%", "%"+q+"%").Find(&product)
+	// err := db.Where("nama_product LIKE ?", "%"+context.Query("q")+"%").Find(&product)
+	if err.Error != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{
+		"status":  "200",
+		"message": "Success",
+		"data":    product,
+	})
+
+}
 
 func GetProduct(context *gin.Context) {
 	reqParamId := context.Param("id_product")
