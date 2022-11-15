@@ -54,12 +54,44 @@ type productResponse struct {
 
 func GetAllProduct(context *gin.Context) {
 	var product []models.Product
+	//user can filter based on id_tipe_battery or nama_tipe_battery
+	id_tipe_battery := context.Query("battery_type_id")
+	nama_tipe_battery := context.Query("battery_type_name")
+	//check is query id_tipe_battery or nama_tipe_battery is empty
+	if id_tipe_battery != "" && nama_tipe_battery != "" {
+		err := db.Raw("SELECT product.*,tipe_battery.nama_tipe_battery FROM `product` INNER JOIN tipe_battery on tipe_battery.id_tipe_battery=product.id_tipe_battery where product.id_tipe_battery = ? AND tipe_battery.nama_tipe_battery = ?", id_tipe_battery, nama_tipe_battery).Find(&product)
+		if err.Error != nil {
+			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
+			return
+		}
+	} else if id_tipe_battery != "" {
+		err := db.Raw("SELECT product.*,tipe_battery.nama_tipe_battery FROM `product` INNER JOIN tipe_battery on tipe_battery.id_tipe_battery=product.id_tipe_battery where product.id_tipe_battery = ?", id_tipe_battery).Find(&product)
+		if err.Error != nil {
+			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
+			return
+		}
 
-	err := db.Find(&product)
-	if err.Error != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
-		return
+	} else if nama_tipe_battery != "" {
+		err := db.Raw("SELECT product.*,tipe_battery.nama_tipe_battery FROM `product` INNER JOIN tipe_battery on tipe_battery.id_tipe_battery=product.id_tipe_battery where tipe_battery.nama_tipe_battery = ?", nama_tipe_battery).Find(&product)
+		if err.Error != nil {
+			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
+			return
+		}
+
+	} else {
+		err := db.Find(&product)
+		if err.Error != nil {
+			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
+			return
+		}
+
 	}
+
+	// err := db.Find(&product)
+	// if err.Error != nil {
+	// 	context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
+	// 	return
+	// }
 
 	context.JSON(http.StatusOK, gin.H{
 		"status":  "200",
