@@ -108,7 +108,7 @@ func SearchProduct(context *gin.Context) {
 	err := db.Where("nama_product LIKE ? OR desc_product LIKE ?", "%"+q+"%", "%"+q+"%").Find(&product)
 	// err := db.Where("nama_product LIKE ?", "%"+context.Query("q")+"%").Find(&product)
 	if err.Error != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
+		context.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
 	}
 
@@ -128,7 +128,8 @@ func GetProduct(context *gin.Context) {
 
 	err := db.First(&product, id_product)
 	if err.Error != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
+		context.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+
 		return
 	}
 
