@@ -33,6 +33,13 @@ type productResponse struct {
 // 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 // 		return
 // 	}
+func map2[T, U any](from []T, mapper func(T) U) []U {
+	to := make([]U, len(from))
+	for i, v := range from {
+		to[i] = mapper(v)
+	}
+	return to
+}
 
 // 	todo := models.Todo{}
 // 	todo.Name = data.Name
@@ -96,7 +103,10 @@ func GetAllProduct(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{
 		"status":  "200",
 		"message": "Success",
-		"data":    product,
+		"data": map2(product, func(p models.Product) models.Product {
+			p.Dimension = "dimensi 10x10x10"
+			return p
+		}),
 	})
 
 }

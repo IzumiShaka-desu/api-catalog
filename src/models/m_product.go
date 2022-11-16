@@ -6,7 +6,7 @@ type Product struct {
 	NamaProduct      string `json:"nama_product"`
 	DescProduct      string `json:"desc_product"`
 	ThumbnailProduct string `json:"thumbnail_product"`
-	// Dimension        string `json:"dimension"`
+	Dimension        string `json:"dimension"`
 }
 
 func (Product) TableName() string {
