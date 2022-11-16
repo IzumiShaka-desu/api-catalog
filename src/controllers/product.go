@@ -120,11 +120,23 @@ func SearchProduct(context *gin.Context) {
 
 }
 
+func GetGalleryProduct(context *gin.Context) {
+	productId := cast.ToUint(context.Param("id_product"))
+	var listOfImage []string
+	err := db.Table("product_gallery").Where("id_product = ?", productId).Pluck("image_product", &listOfImage)
+	if err.Error != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
+		return
+	}
+
+	context.JSON(http.StatusOK, listOfImage)
+}
+
 func GetProduct(context *gin.Context) {
 	reqParamId := context.Param("id_product")
 	id_product := cast.ToUint(reqParamId)
 
-	var product []models.Product
+	var product models.Product
 
 	err := db.First(&product, id_product)
 	if err.Error != nil {
