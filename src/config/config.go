@@ -7,6 +7,7 @@ import (
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 // ConnectDB connects go to mysql database
@@ -23,7 +24,7 @@ func ConnectDB() *gorm.DB {
 	dbPorts := os.Getenv("DB_PORT")
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=true&loc=Local", dbUser, dbPass, dbHost, dbPorts, dbName)
-	db, errorDB := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, errorDB := gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
 	if errorDB != nil {
 		panic("Failed to connect mysql database")
 	}
