@@ -59,27 +59,41 @@ func map2[T, U any](from []T, mapper func(T) U) []U {
 // 	context.JSON(http.StatusCreated, response)
 // }
 
+//SELECT product.*,tipe_battery.nama_tipe_battery,tipe_kendaraan.nama_tipe,brand_kendaraan.nama_brand,jenis_kendaraan.nama_jenis_kendaraan FROM `product` LEFT JOIN tipe_battery on tipe_battery.id_tipe_battery=product.id_tipe_battery LEFT JOIN product_tree ON product_tree.id_product = product.id_product LEFT JOIN tipe_kendaraan on product_tree.id_tipe = tipe_kendaraan.id_tipe LEFT JOIN brand_kendaraan ON brand_kendaraan.id_brand = product_tree.id_brand LEFT JOIN jenis_kendaraan ON jenis_kendaraan.id_jenis_kendaraan=product_tree.id_jenis_kendaraan;
+
 func GetAllProduct(context *gin.Context) {
 	var product []models.Product
 	//user can filter based on id_tipe_battery or nama_tipe_battery
 	id_tipe_battery := context.Query("battery_type_id")
 	nama_tipe_battery := context.Query("battery_type_name")
+	// filter by type,brand,model
+	type_name := context.Query("vehicle_type_name")
+	brand_name := context.Query("vehicle_brand_name")
+	model_name := context.Query("vehicle_model_name")
+	// base_query := "SELECT product.*,tipe_battery.nama_tipe_battery FROM `product` INNER JOIN tipe_battery on tipe_battery.id_tipe_battery=product.id_tipe_battery"
+	base_query := "SELECT * FROM product_complete_data"
 	//check is query id_tipe_battery or nama_tipe_battery is empty
-	if id_tipe_battery != "" && nama_tipe_battery != "" {
-		err := db.Raw("SELECT product.*,tipe_battery.nama_tipe_battery FROM `product` INNER JOIN tipe_battery on tipe_battery.id_tipe_battery=product.id_tipe_battery where product.id_tipe_battery = ? AND tipe_battery.nama_tipe_battery = ?", id_tipe_battery, nama_tipe_battery).Find(&product)
-		if err.Error != nil {
-			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
-			return
-		}
-	} else if id_tipe_battery != "" {
-		err := db.Raw("SELECT product.*,tipe_battery.nama_tipe_battery FROM `product` INNER JOIN tipe_battery on tipe_battery.id_tipe_battery=product.id_tipe_battery where product.id_tipe_battery = ?", id_tipe_battery).Find(&product)
+	if type_name != "" && brand_name != "" && model_name != "" {
+		err := db.Raw(base_query + " WHERE nama_jenis_kendaraan = '" + type_name + "' AND nama_brand = '" + brand_name + "' AND nama_tipe = '" + model_name + "'").Find(&product)
 		if err.Error != nil {
 			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
 			return
 		}
 
+	} else if id_tipe_battery != "" && nama_tipe_battery != "" {
+		err := db.Raw(base_query+" where product.id_tipe_battery = ? AND tipe_battery.nama_tipe_battery = ?", id_tipe_battery, nama_tipe_battery).Find(&product)
+		if err.Error != nil {
+			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
+			return
+		}
+	} else if id_tipe_battery != "" {
+		err := db.Raw(base_query+"  where product.id_tipe_battery = ?", id_tipe_battery).Find(&product)
+		if err.Error != nil {
+			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
+			return
+		}
 	} else if nama_tipe_battery != "" {
-		err := db.Raw("SELECT product.*,tipe_battery.nama_tipe_battery FROM `product` INNER JOIN tipe_battery on tipe_battery.id_tipe_battery=product.id_tipe_battery where tipe_battery.nama_tipe_battery = ?", nama_tipe_battery).Find(&product)
+		err := db.Raw(base_query+"  where tipe_battery.nama_tipe_battery = ?", nama_tipe_battery).Find(&product)
 		if err.Error != nil {
 			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
 			return
