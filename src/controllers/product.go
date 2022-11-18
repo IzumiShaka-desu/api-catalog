@@ -110,6 +110,34 @@ func GetAllProduct(context *gin.Context) {
 	})
 
 }
+func GetProductFilters(context *gin.Context) {
+	var filters []models.FilterVehicle
+	err := db.Table("jenis_kendaraan").Find(&filters)
+	if err.Error != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
+		return
+	}
+
+	filters = map2(filters, func(f models.FilterVehicle) models.FilterVehicle {
+		var brands []models.VehicleBrand
+		db.Table("brand_kendaraan").Where("id_jenis_kendaraan = ?", f.IdJenisKendaraan).Find(&brands)
+		brands = map2(brands, func(b models.VehicleBrand) models.VehicleBrand {
+			var models []models.VehicleModel
+			db.Table("tipe_kendaraan").Where("id_brand = ?", b.IdBrand).Find(&models)
+			b.Models = models
+			return b
+		})
+		f.Brands = brands
+		return f
+	})
+
+	context.JSON(http.StatusOK, gin.H{
+		"status":  "200",
+		"message": "Success",
+		"data":    filters,
+	})
+
+}
 func SearchProduct(context *gin.Context) {
 	var product []models.Product
 	//query q to search based on nama_product and desc_product
