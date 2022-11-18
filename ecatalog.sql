@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:8889
--- Generation Time: Nov 15, 2022 at 07:47 AM
+-- Generation Time: Nov 18, 2022 at 07:56 AM
 -- Server version: 5.7.34
 -- PHP Version: 7.4.21
 
@@ -104,6 +104,26 @@ CREATE TABLE `jenis_kendaraan` (
 INSERT INTO `jenis_kendaraan` (`id_jenis_kendaraan`, `nama_jenis_kendaraan`) VALUES
 (1, 'Roda 4'),
 (2, 'Roda 2');
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `join product tree`
+-- (See below for the actual view)
+--
+CREATE TABLE `join product tree` (
+`id_product` int(11)
+,`id_tipe_battery` int(11)
+,`nama_product` text
+,`desc_product` text
+,`thumbnail_product` varchar(100)
+,`spec_product` varchar(50)
+,`created_at` timestamp
+,`nama_tipe_battery` varchar(100)
+,`nama_tipe` text
+,`nama_brand` text
+,`nama_jenis_kendaraan` varchar(100)
+);
 
 -- --------------------------------------------------------
 
@@ -293,6 +313,26 @@ INSERT INTO `product` (`id_product`, `id_tipe_battery`, `nama_product`, `desc_pr
 -- --------------------------------------------------------
 
 --
+-- Stand-in structure for view `product_complete_data`
+-- (See below for the actual view)
+--
+CREATE TABLE `product_complete_data` (
+`id_product` int(11)
+,`id_tipe_battery` int(11)
+,`nama_product` text
+,`desc_product` text
+,`thumbnail_product` varchar(100)
+,`spec_product` varchar(50)
+,`created_at` timestamp
+,`nama_tipe_battery` varchar(100)
+,`nama_tipe` text
+,`nama_brand` text
+,`nama_jenis_kendaraan` varchar(100)
+);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `product_gallery`
 --
 
@@ -308,7 +348,18 @@ CREATE TABLE `product_gallery` (
 --
 
 INSERT INTO `product_gallery` (`id_product_gallery`, `id_product`, `image_product`, `created_at`) VALUES
-(1, 1, '17aed4e42c27d376b69325709c5c222e.jpg', '2021-12-09 01:32:27');
+(1, 1, '17aed4e42c27d376b69325709c5c222e.jpg', '2021-12-09 01:32:27'),
+(2, 1, '12N24MFincoe0.jpeg', '2022-11-16 00:56:46'),
+(3, 1, '12N24MFincoe1.jpeg', '2022-11-16 00:56:46'),
+(4, 1, '12N24MFincoe2.jpeg', '2022-11-16 00:56:46'),
+(5, 16, '55D23incoe1.jpeg', '2022-11-16 01:02:34'),
+(6, 16, '55D23incoe2.jpeg', '2022-11-16 01:02:34'),
+(7, 16, '55D23incoe3.jpeg', '2022-11-16 01:02:34'),
+(8, 16, '55D23incoe4.jpeg', '2022-11-16 01:02:34'),
+(9, 2, 'NS40incoe3.jpeg', '2022-11-16 01:02:34'),
+(10, 2, 'NS40incoe0.jpeg', '2022-11-16 01:02:34'),
+(11, 2, 'NS40incoe1.jpeg', '2022-11-16 01:02:34'),
+(12, 2, 'NS40incoe2.jpeg', '2022-11-16 01:02:34');
 
 -- --------------------------------------------------------
 
@@ -689,6 +740,24 @@ CREATE TABLE `watch_list` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+-- --------------------------------------------------------
+
+--
+-- Structure for view `join product tree`
+--
+DROP TABLE IF EXISTS `join product tree`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`join_product_tree`@`%` SQL SECURITY DEFINER VIEW `join product tree`  AS SELECT `product`.`id_product` AS `id_product`, `product`.`id_tipe_battery` AS `id_tipe_battery`, `product`.`nama_product` AS `nama_product`, `product`.`desc_product` AS `desc_product`, `product`.`thumbnail_product` AS `thumbnail_product`, `product`.`spec_product` AS `spec_product`, `product`.`created_at` AS `created_at`, `tipe_battery`.`nama_tipe_battery` AS `nama_tipe_battery`, `tipe_kendaraan`.`nama_tipe` AS `nama_tipe`, `brand_kendaraan`.`nama_brand` AS `nama_brand`, `jenis_kendaraan`.`nama_jenis_kendaraan` AS `nama_jenis_kendaraan` FROM (((((`product` left join `tipe_battery` on((`tipe_battery`.`id_tipe_battery` = `product`.`id_tipe_battery`))) left join `product_tree` on((`product_tree`.`id_product` = `product`.`id_product`))) left join `tipe_kendaraan` on((`product_tree`.`id_tipe` = `tipe_kendaraan`.`id_tipe`))) left join `brand_kendaraan` on((`brand_kendaraan`.`id_brand` = `product_tree`.`id_brand`))) left join `jenis_kendaraan` on((`jenis_kendaraan`.`id_jenis_kendaraan` = `product_tree`.`id_jenis_kendaraan`))) ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `product_complete_data`
+--
+DROP TABLE IF EXISTS `product_complete_data`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `product_complete_data`  AS SELECT `product`.`id_product` AS `id_product`, `product`.`id_tipe_battery` AS `id_tipe_battery`, `product`.`nama_product` AS `nama_product`, `product`.`desc_product` AS `desc_product`, `product`.`thumbnail_product` AS `thumbnail_product`, `product`.`spec_product` AS `spec_product`, `product`.`created_at` AS `created_at`, `tipe_battery`.`nama_tipe_battery` AS `nama_tipe_battery`, `tipe_kendaraan`.`nama_tipe` AS `nama_tipe`, `brand_kendaraan`.`nama_brand` AS `nama_brand`, `jenis_kendaraan`.`nama_jenis_kendaraan` AS `nama_jenis_kendaraan` FROM (((((`product` left join `tipe_battery` on((`tipe_battery`.`id_tipe_battery` = `product`.`id_tipe_battery`))) left join `product_tree` on((`product_tree`.`id_product` = `product`.`id_product`))) left join `tipe_kendaraan` on((`product_tree`.`id_tipe` = `tipe_kendaraan`.`id_tipe`))) left join `brand_kendaraan` on((`brand_kendaraan`.`id_brand` = `product_tree`.`id_brand`))) left join `jenis_kendaraan` on((`jenis_kendaraan`.`id_jenis_kendaraan` = `product_tree`.`id_jenis_kendaraan`))) ;
+
 --
 -- Indexes for dumped tables
 --
@@ -808,7 +877,7 @@ ALTER TABLE `product`
 -- AUTO_INCREMENT for table `product_gallery`
 --
 ALTER TABLE `product_gallery`
-  MODIFY `id_product_gallery` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_product_gallery` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `product_tree`
