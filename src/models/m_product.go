@@ -7,6 +7,7 @@ type Product struct {
 	DescProduct      string `json:"desc_product"`
 	ThumbnailProduct string `json:"thumbnail_product"`
 	Dimension        string `json:"dimension"`
+	IsFavourite      bool   `json:"is_favourite"`
 }
 
 func (Product) TableName() string {
