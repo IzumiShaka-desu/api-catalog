@@ -1,15 +1,18 @@
 package controllers
 
 import (
-	"net/http"
-
 	"api-catalog/src/config"
 	"api-catalog/src/models"
+	"api-catalog/src/utils"
+	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
 	"gorm.io/gorm"
 )
+
+var SECRET_KEY = "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC2dK1Y76ohJ5ek\nlXQG+WHdtodH375xSRjiH7vbuiYz136zsSvEpUvp8Id8ZwJHw7GzYM5vzyD1Qe16\nW0bbIoRj5bmFHRhxujw9/Ixkh72ynElLSkEZnkE80PqN0J+/wavZqlLEvXFiIWnX\nEbruVhB+rgHWpQQ62zByMnQdI4XgCTJfsU5Ljrj0m2V9ieBwzAnPW8THQj04ZVtX\nGvfAvbXVje7lKRe4HZdTr/A5KgazhjtSxExKtI9F3jRIl95oDD3z+wmBTvBp14I3\n2tcjF46w2EMLEyUBwgmVpauw9CW2fhBRPD6zQw3mEQ+PqTkMhb+e/WgzPkyQ/NXD\nEbg5riQRAgMBAAECggEABWSDbxp+S8aQy9OC/2XFh7kKXIx3Y3/GlYBcnAzvbh7T\nZto4sfI0wTBTwNCGl7pn+SZGU7WqgrU1IKWr/XQSt6Uli5Klk07u0uIxABOm/q1x\n2SDTtb8grHx8u05MOm2t95v6IEh9HmpgZ3Pls3+lsyjPcxmje13ZG7b0CZxwK4Pt\nMvAAizGnh95+BK48jBXzPd3KDPOKHerzgvVXlhgKneynZa4/6YI2hokUwoQpz7Vb\n4BMdCfADNXBBaztzck61WNUFi1B2WJsG8DG+ebw1+23BbIGMMIvl/YPJ5Mwx+Fju\ntdDme80GILZfXr0jzzdqZmmZ92TadvGEktWJtmYy9QKBgQD0ZcFf1g74A91Lq/xz\nMgOU8rbMGGtd0O1Y/+omVCisxO3DEl+yRtvNeBgezRYzMuHDKV9Pk8kdACmdBfoi\nGdX7QVz1kl1C2+d5Rd99jwnzZ7mIMpuTd3vCxzyyp0nAtq7qgCZlvtN8rPsp8uzB\n+AujbUcUHpD3k64fsGYTZxPqYwKBgQC/Hh+UKmd416DoXeBDTpOuHN8iWUB2RieY\n4ugObQchYzEclJWkYk5W6Lqri2kHMfuesi9QXfeWB2Ut/m/q297Qb/VjUatHpc9R\nmw97ex2ivAElEfY4lPfVOToiECE9aSf0KBmj/zTDnKugeejugiSE494xDuK+nVv9\nyn6i2Tjn+wKBgAYypmrFxO9pOa13mRlaxVh7p0MZw29Hox1EsC10qOtouxbdWmvs\n/BoD16jATrXRroQCgpZECy+fF28R/bvrp8+NYswfgBn39bDPotFOVVRE5yGbFvLw\nbsULxHBLacVnXJw5z794zWg2AtCXhoWMws7MMKdD9y0wI5ROJuiLDqg9AoGAal1f\ngdyfvbd0TB6DA7Klqk9TOBCoOasNup7+O5keUMydtqRTLCuyIdhgm7x49ZIx0b6l\nansBojP3ccObkgBQX30P+vim9LcpTOeZlEWO1tT/Zhw7Bn6R989jtTV46m6t18rB\nim4sdXmqYyO2KZewr20Kag84zpFRc0vRctymOSUCgYEA45lzOOJ5ngl+eOCVDMW8\nX8dqZck/0buwj5JL0Te5Lg7gXgsj5vcLyM+RatlZ2kErW2ZR40SXIb/6tyALVF7w\nABJCtHhDIcQvfNKIqGgHr2hyJPGOqy89hFeqn+mIAu1w8/IVda7QSxESnzh+G/ZP\n2cLECIgWidTpEZ/Kk5TQ6R4=\n-----END PRIVATE KEY-----\n"
 
 var db *gorm.DB = config.ConnectDB()
 
@@ -79,7 +82,7 @@ func GetAllProduct(context *gin.Context) {
 			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
 			return
 		}
-
+		//SELECT *,EXISTS(SELECT * FROM watch_list WHERE watch_list.id_user="sdasd" AND watch_list.id_product=product.id_product) as isFav FROM `product` WHERE 1;
 	} else if id_tipe_battery != "" && nama_tipe_battery != "" {
 		err := db.Raw(base_query+" where product.id_tipe_battery = ? AND tipe_battery.nama_tipe_battery = ?", id_tipe_battery, nama_tipe_battery).Find(&product)
 		if err.Error != nil {
@@ -180,7 +183,6 @@ func GetGalleryProduct(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
 		return
 	}
-
 	context.JSON(http.StatusOK, listOfImage)
 }
 
@@ -193,10 +195,8 @@ func GetProduct(context *gin.Context) {
 	err := db.First(&product, id_product)
 	if err.Error != nil {
 		context.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
-
 		return
 	}
-
 	context.JSON(http.StatusOK, gin.H{
 		"status":  "200",
 		"message": "Success",
@@ -205,6 +205,35 @@ func GetProduct(context *gin.Context) {
 
 }
 
+func PostFavouriteProduct(context *gin.Context) {
+	productId := context.Param("id_product")
+
+	//parse jwt body from bearer token
+	token := strings.Replace(context.Request.Header["Authorization"][0], "Bearer ", "", 1)
+	var claims = utils.ExtractClaims(token)
+
+	//delete if exit else insert using sql query
+	var count int64
+	db.Table("watch_list").Where("id_product = ? AND id_user = ?", productId, claims.UserId).Count(&count)
+	if count > 0 {
+		db.Exec("DELETE FROM watch_list WHERE id_product = ? AND id_user = ?", productId, claims.UserId)
+		context.JSON(http.StatusOK, gin.H{
+			"status":       "200",
+			"is_favorited": false,
+			"message":      "Product removed from favourite",
+		})
+	} else {
+		db.Exec("INSERT INTO watch_list (id_product, id_user) VALUES (?, ?)", productId, claims.UserId)
+		context.JSON(http.StatusOK, gin.H{
+			"status":       "200",
+			"is_favorited": true,
+			"message":      "Product added to favourite",
+		})
+	}
+
+}
+
+// INSERT INTO `watch_list`(`id_list`, `id_user`, `id_product`, `created_at`) VALUES (NULL,?,?,NULL)
 func UpdateProduct(context *gin.Context) {
 	var data productRequest
 	reqParamId := context.Param("id_product")
