@@ -5,6 +5,7 @@ import (
 	"api-catalog/src/models"
 	"api-catalog/src/utils"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -43,6 +44,15 @@ func map2[T, U any](from []T, mapper func(T) U) []U {
 	}
 	return to
 }
+func where[T any](from []T, predicate func(T) bool) []T {
+	to := make([]T, 0, len(from))
+	for _, v := range from {
+		if predicate(v) {
+			to = append(to, v)
+		}
+	}
+	return to
+}
 
 // 	todo := models.Todo{}
 // 	todo.Name = data.Name
@@ -69,41 +79,50 @@ func GetAllProduct(context *gin.Context) {
 	//user can filter based on id_tipe_battery or nama_tipe_battery
 	id_tipe_battery := context.Query("battery_type_id")
 	nama_tipe_battery := context.Query("battery_type_name")
+	favquery := context.Query("is_favorited")
+	is_favorited, err := strconv.ParseBool(favquery)
+	if err != nil {
+		favquery = ""
+	}
+
 	// filter by type,brand,model
 	type_name := context.Query("vehicle_type_name")
 	brand_name := context.Query("vehicle_brand_name")
 	model_name := context.Query("vehicle_model_name")
+	token := strings.Replace(context.Request.Header["Authorization"][0], "Bearer ", "", 1)
+	var claims = utils.ExtractClaims(token)
+
 	// base_query := "SELECT product.*,tipe_battery.nama_tipe_battery FROM `product` INNER JOIN tipe_battery on tipe_battery.id_tipe_battery=product.id_tipe_battery"
-	base_query := "SELECT * FROM product_complete_data"
+	base_query := "SELECT *,EXISTS(SELECT * FROM watch_list WHERE watch_list.id_user='" + claims.UserId + "' AND watch_list.id_product=product_complete_data.id_product) as is_favourite FROM product_complete_data"
+	order_by := " ORDER BY id_product ASC"
 	//check is query id_tipe_battery or nama_tipe_battery is empty
 	if type_name != "" && brand_name != "" && model_name != "" {
-		err := db.Raw(base_query + " WHERE nama_jenis_kendaraan = '" + type_name + "' AND nama_brand = '" + brand_name + "' AND nama_tipe = '" + model_name + "'").Find(&product)
+		err := db.Raw(base_query + " WHERE nama_jenis_kendaraan = '" + type_name + "' AND nama_brand = '" + brand_name + "' AND nama_tipe = '" + model_name + "'" + order_by).Find(&product)
 		if err.Error != nil {
 			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
 			return
 		}
 		//SELECT *,EXISTS(SELECT * FROM watch_list WHERE watch_list.id_user="sdasd" AND watch_list.id_product=product.id_product) as isFav FROM `product` WHERE 1;
 	} else if id_tipe_battery != "" && nama_tipe_battery != "" {
-		err := db.Raw(base_query+" where product.id_tipe_battery = ? AND tipe_battery.nama_tipe_battery = ?", id_tipe_battery, nama_tipe_battery).Find(&product)
+		err := db.Raw(base_query+" where product.id_tipe_battery = ? AND tipe_battery.nama_tipe_battery = ?", id_tipe_battery, nama_tipe_battery+order_by).Find(&product)
 		if err.Error != nil {
 			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
 			return
 		}
 	} else if id_tipe_battery != "" {
-		err := db.Raw(base_query+"  where product.id_tipe_battery = ?", id_tipe_battery).Find(&product)
+		err := db.Raw(base_query+"  where product.id_tipe_battery = ?", id_tipe_battery+order_by).Find(&product)
 		if err.Error != nil {
 			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
 			return
 		}
 	} else if nama_tipe_battery != "" {
-		err := db.Raw(base_query+"  where tipe_battery.nama_tipe_battery = ?", nama_tipe_battery).Find(&product)
+		err := db.Raw(base_query+"  where tipe_battery.nama_tipe_battery = ?", nama_tipe_battery+order_by).Find(&product)
 		if err.Error != nil {
 			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
 			return
 		}
-
 	} else {
-		err := db.Find(&product)
+		err := db.Raw(base_query + order_by).Find(&product)
 		if err.Error != nil {
 			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
 			return
@@ -120,8 +139,14 @@ func GetAllProduct(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{
 		"status":  "200",
 		"message": "Success",
-		"data": map2(product, func(p models.Product) models.Product {
+		"data": map2(where(product, func(p models.Product) bool {
+			if favquery != "" {
+				return p.IsFavourite == is_favorited
+			}
+			return true
+		}), func(p models.Product) models.Product {
 			p.Dimension = "dimensi 10x10x10"
+
 			return p
 		}),
 	})
@@ -161,7 +186,7 @@ func SearchProduct(context *gin.Context) {
 	q := context.Query("q")
 
 	err := db.Where("nama_product LIKE ? OR desc_product LIKE ?", "%"+q+"%", "%"+q+"%").Find(&product)
-	// err := db.Where("nama_product LIKE ?", "%"+context.Query("q")+"%").Find(&product)
+	// err := db.Where("nama_product LIKE ?", "%"+context.Query("q")+"%"+ order_by).Find(&product)
 	if err.Error != nil {
 		context.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
