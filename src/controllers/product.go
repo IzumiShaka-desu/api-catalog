@@ -216,8 +216,13 @@ func GetProduct(context *gin.Context) {
 	id_product := cast.ToUint(reqParamId)
 
 	var product models.Product
+	token := strings.Replace(context.Request.Header["Authorization"][0], "Bearer ", "", 1)
+	var claims = utils.ExtractClaims(token)
 
-	err := db.First(&product, id_product)
+	// base_query := "SELECT product.*,tipe_battery.nama_tipe_battery FROM `product` INNER JOIN tipe_battery on tipe_battery.id_tipe_battery=product.id_tipe_battery"
+	base_query := "SELECT *,EXISTS(SELECT * FROM watch_list WHERE watch_list.id_user='" + claims.UserId + "' AND watch_list.id_product=product.id_product) as is_favourite from product where id_product = ? limit 1"
+	err := db.Raw(base_query, id_product).Find(&product)
+
 	if err.Error != nil {
 		context.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
