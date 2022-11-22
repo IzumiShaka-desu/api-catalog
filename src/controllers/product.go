@@ -104,19 +104,19 @@ func GetAllProduct(context *gin.Context) {
 		}
 		//SELECT *,EXISTS(SELECT * FROM watch_list WHERE watch_list.id_user="sdasd" AND watch_list.id_product=product.id_product) as isFav FROM `product` WHERE 1;
 	} else if id_tipe_battery != "" && nama_tipe_battery != "" {
-		err := db.Raw(base_query+" where product.id_tipe_battery = ? AND tipe_battery.nama_tipe_battery = ?", id_tipe_battery, nama_tipe_battery+order_by).Find(&product)
+		err := db.Raw(base_query+" where product.id_tipe_battery = ? AND product_complete_data.nama_tipe_battery = ? "+order_by, id_tipe_battery, nama_tipe_battery).Find(&product)
 		if err.Error != nil {
 			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
 			return
 		}
 	} else if id_tipe_battery != "" {
-		err := db.Raw(base_query+"  where product.id_tipe_battery = ?", id_tipe_battery+order_by).Find(&product)
+		err := db.Raw(base_query+"  where product.id_tipe_battery = ? "+order_by, id_tipe_battery).Find(&product)
 		if err.Error != nil {
 			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
 			return
 		}
 	} else if nama_tipe_battery != "" {
-		err := db.Raw(base_query+"  where tipe_battery.nama_tipe_battery = ?", nama_tipe_battery+order_by).Find(&product)
+		err := db.Raw(base_query+"  where product_complete_data.nama_tipe_battery = ? "+order_by, nama_tipe_battery).Find(&product)
 		if err.Error != nil {
 			context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
 			return
@@ -252,6 +252,7 @@ func PostFavouriteProduct(context *gin.Context) {
 			"is_favorited": false,
 			"message":      "Product removed from favourite",
 		})
+
 	} else {
 		db.Exec("INSERT INTO watch_list (id_product, id_user) VALUES (?, ?)", productId, claims.UserId)
 		context.JSON(http.StatusOK, gin.H{
