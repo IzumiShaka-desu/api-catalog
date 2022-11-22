@@ -54,10 +54,6 @@ func where[T any](from []T, predicate func(T) bool) []T {
 	return to
 }
 
-// 	todo := models.Todo{}
-// 	todo.Name = data.Name
-// 	todo.Description = data.Description
-
 // 	result := db.Create(&todo)
 // 	if result.Error != nil {
 // 		context.JSON(http.StatusBadRequest, gin.H{"error": "Something went wrong"})
@@ -74,6 +70,19 @@ func where[T any](from []T, predicate func(T) bool) []T {
 
 //SELECT product.*,tipe_battery.nama_tipe_battery,tipe_kendaraan.nama_tipe,brand_kendaraan.nama_brand,jenis_kendaraan.nama_jenis_kendaraan FROM `product` LEFT JOIN tipe_battery on tipe_battery.id_tipe_battery=product.id_tipe_battery LEFT JOIN product_tree ON product_tree.id_product = product.id_product LEFT JOIN tipe_kendaraan on product_tree.id_tipe = tipe_kendaraan.id_tipe LEFT JOIN brand_kendaraan ON brand_kendaraan.id_brand = product_tree.id_brand LEFT JOIN jenis_kendaraan ON jenis_kendaraan.id_jenis_kendaraan=product_tree.id_jenis_kendaraan;
 
+func GetNewProduct(context *gin.Context) {
+	var product []models.Product
+	err := db.Order("created_at desc").Limit(10).Find(&product)
+	if err.Error != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
+		return
+	}
+	context.JSON(http.StatusOK, gin.H{
+		"status":  "200",
+		"message": "Success",
+		"data":    product})
+}
+
 func GetAllProduct(context *gin.Context) {
 	var product []models.Product
 	//user can filter based on id_tipe_battery or nama_tipe_battery
@@ -89,7 +98,10 @@ func GetAllProduct(context *gin.Context) {
 	type_name := context.Query("vehicle_type_name")
 	brand_name := context.Query("vehicle_brand_name")
 	model_name := context.Query("vehicle_model_name")
-	token := strings.Replace(context.Request.Header["Authorization"][0], "Bearer ", "", 1)
+	var token string = ""
+	if len(context.Request.Header["Authorization"]) > 0 {
+		token = strings.Replace(context.Request.Header["Authorization"][0], "Bearer ", "", 1)
+	}
 	var claims = utils.ExtractClaims(token)
 
 	// base_query := "SELECT product.*,tipe_battery.nama_tipe_battery FROM `product` INNER JOIN tipe_battery on tipe_battery.id_tipe_battery=product.id_tipe_battery"
@@ -135,6 +147,10 @@ func GetAllProduct(context *gin.Context) {
 	// 	context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting data"})
 	// 	return
 	// }
+	if len(product) <= 0 {
+		context.JSON(http.StatusNotFound, gin.H{"message": "No product found"})
+		return
+	}
 
 	context.JSON(http.StatusOK, gin.H{
 		"status":  "200",
@@ -216,7 +232,10 @@ func GetProduct(context *gin.Context) {
 	id_product := cast.ToUint(reqParamId)
 
 	var product models.Product
-	token := strings.Replace(context.Request.Header["Authorization"][0], "Bearer ", "", 1)
+	var token string = ""
+	if len(context.Request.Header["Authorization"]) > 0 {
+		token = strings.Replace(context.Request.Header["Authorization"][0], "Bearer ", "", 1)
+	}
 	var claims = utils.ExtractClaims(token)
 
 	// base_query := "SELECT product.*,tipe_battery.nama_tipe_battery FROM `product` INNER JOIN tipe_battery on tipe_battery.id_tipe_battery=product.id_tipe_battery"
@@ -239,7 +258,10 @@ func PostFavouriteProduct(context *gin.Context) {
 	productId := context.Param("id_product")
 
 	//parse jwt body from bearer token
-	token := strings.Replace(context.Request.Header["Authorization"][0], "Bearer ", "", 1)
+	var token string = ""
+	if len(context.Request.Header["Authorization"]) > 0 {
+		token = strings.Replace(context.Request.Header["Authorization"][0], "Bearer ", "", 1)
+	}
 	var claims = utils.ExtractClaims(token)
 
 	//delete if exit else insert using sql query
