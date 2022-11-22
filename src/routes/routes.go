@@ -13,6 +13,7 @@ func Routes() {
 	route.Static("/image", "./image")
 	// route.POST("/todo", controllers.CreateTodo)
 	route.GET("/product", controllers.GetAllProduct)
+	route.GET("/product/new", controllers.GetNewProduct)
 	route.GET("/product/filters", controllers.GetProductFilters)
 	route.GET("/product/:id_product", controllers.GetProduct)
 	route.GET("/product/:id_product/gallery", controllers.GetGalleryProduct)
